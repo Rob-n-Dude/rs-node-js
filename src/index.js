@@ -1,7 +1,6 @@
 import { getUserNameAndGreet } from "./helpers/user.js"
-import { Logger } from "./streams/Logger.js"
-import { UserInputTransform } from "./streams/UserInputTransform.js"
-import { Transform } from 'node:stream'
+import { exitInstruction } from "./instructions/index.js"
+import { Logger, UserInputTransform } from "./streams/index.js"
 
 const startFileManager = async () => {
   getUserNameAndGreet()
@@ -10,7 +9,9 @@ const startFileManager = async () => {
 
   process.stdin.pipe(userInputHandler).pipe(logger)
 
-
+  process.on('SIGINT', () => {
+    exitInstruction()
+  })
 }
 
 
