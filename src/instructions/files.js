@@ -1,9 +1,9 @@
 import { createReadStream } from 'node:fs'
-import { basename, join, resolve } from 'node:path'
+import { basename, dirname, join, resolve } from 'node:path'
 import { UserMessage } from '../constants/userMessage.js'
 import { fallbackInstruction } from './fallback.js'
 import { EOL } from 'node:os'
-import { open } from 'node:fs/promises'
+import { access, mkdir, open, rename } from 'node:fs/promises'
 
 export const catInstruction = (path) => {
   const currentDir = process.cwd()
@@ -30,7 +30,7 @@ export const catInstruction = (path) => {
 
 export const createEmptyFile = async (fileName) => {
   if (!fileName) {
-    throw new Error(UserMessage.INVALID_INPUT)
+    return fallbackInstruction()
   }
 
   const currentDirectory = process.cwd()
@@ -42,6 +42,45 @@ export const createEmptyFile = async (fileName) => {
     await file.close()
 
   } catch (e) {
-    console.log('error', e)
+    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+  }
+}
+
+export const createDirectory = async (dirName) => {
+  if (!dirName) {
+    fallbackInstruction()
+    return
+  }
+
+  
+  const currentDirectory = process.cwd()
+  const safeDirPath = join(currentDirectory, basename(dirName))
+
+  try {
+    await mkdir(safeDirPath, { recursive: false })
+  } catch(e) {
+      throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+  }
+}
+
+export const renameFile = async (filePath, newName) => {
+  const absoluteFilePath = resolve(process.cwd(), filePath)
+
+
+  const newSafeFilePath = join(dirname(absoluteFilePath), basename(newName))
+
+  try {
+    await access(newSafeFilePath)
+    throw new Error(UserMessage.OPERATION_FAILED)
+  } catch (e){
+    if (e.code !== 'ENOENT') {
+      throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+    }
+  }
+
+  try {
+    await rename(absoluteFilePath, newSafeFilePath)
+  } catch (e) {
+    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
   }
 }

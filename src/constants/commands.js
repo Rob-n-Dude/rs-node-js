@@ -5,4 +5,6 @@ export const KNOWN_COMMANDS = {
   LS: 'ls',
   CAT: 'cat',
   ADD: 'add',
+  MK_DIR: 'mkdir',
+  RN: 'rn',
 }

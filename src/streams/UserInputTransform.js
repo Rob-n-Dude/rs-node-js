@@ -10,6 +10,8 @@ import {
   listInstruction,
   catInstruction,
   createEmptyFile,
+  createDirectory,
+  renameFile,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -22,6 +24,8 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.LS]: listInstruction,
   [KNOWN_COMMANDS.CAT]: catInstruction, 
   [KNOWN_COMMANDS.ADD]: createEmptyFile,
+  [KNOWN_COMMANDS.MK_DIR]: createDirectory,
+  [KNOWN_COMMANDS.RN]: renameFile,
 }
 
 export class UserInputTransform extends Transform {
@@ -32,14 +36,16 @@ export class UserInputTransform extends Transform {
     process.chdir(os.homedir())
   }
 
-  _transform (chunk, encoding, callback) {
-    const [command, value, ..._] = chunk.toString().trim().split(commandSeparator)
+  async _transform (chunk, encoding, callback) {
+    const [command, ...value] = chunk.toString().trim().split(commandSeparator)
 
     try {
       const instruction = MAP_COMMAND_TO_OPERATION[command]
   
-      instruction(value)
-    } catch {
+      await instruction(...value)
+    } catch (e) {
+      // TODO: find a new way to handle errors
+      console.log('inside transform', e)
       fallbackInstruction()
     } finally {
       this.push(loggerTrigger)
