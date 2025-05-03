@@ -2,5 +2,6 @@ export const KNOWN_COMMANDS = {
   EXIT: '.exit',
   UP: 'up',
   CD: 'cd',
-  LS: 'ls'
+  LS: 'ls',
+  CAT: 'cat',
 }
