@@ -9,9 +9,10 @@ import {
   cdInstruction,
   listInstruction,
   catInstruction,
-  createEmptyFile,
-  createDirectory,
-  renameFile,
+  createEmptyFileInstruction,
+  createDirectoryInstruction,
+  renameFileInstruction,
+  copyFileInstruction,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -23,9 +24,10 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.CD]: cdInstruction,
   [KNOWN_COMMANDS.LS]: listInstruction,
   [KNOWN_COMMANDS.CAT]: catInstruction, 
-  [KNOWN_COMMANDS.ADD]: createEmptyFile,
-  [KNOWN_COMMANDS.MK_DIR]: createDirectory,
-  [KNOWN_COMMANDS.RN]: renameFile,
+  [KNOWN_COMMANDS.ADD]: createEmptyFileInstruction,
+  [KNOWN_COMMANDS.MK_DIR]: createDirectoryInstruction,
+  [KNOWN_COMMANDS.RN]: renameFileInstruction,
+  [KNOWN_COMMANDS.CP]: copyFileInstruction,
 }
 
 export class UserInputTransform extends Transform {

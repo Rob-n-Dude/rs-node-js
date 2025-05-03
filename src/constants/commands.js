@@ -7,4 +7,5 @@ export const KNOWN_COMMANDS = {
   ADD: 'add',
   MK_DIR: 'mkdir',
   RN: 'rn',
+  CP: 'cp',
 }
