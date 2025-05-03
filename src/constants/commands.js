@@ -4,4 +4,5 @@ export const KNOWN_COMMANDS = {
   CD: 'cd',
   LS: 'ls',
   CAT: 'cat',
+  ADD: 'add',
 }

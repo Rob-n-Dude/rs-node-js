@@ -8,7 +8,8 @@ import {
   upInstruction,
   cdInstruction,
   listInstruction,
-  catInstruction
+  catInstruction,
+  createEmptyFile,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -20,6 +21,7 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.CD]: cdInstruction,
   [KNOWN_COMMANDS.LS]: listInstruction,
   [KNOWN_COMMANDS.CAT]: catInstruction, 
+  [KNOWN_COMMANDS.ADD]: createEmptyFile,
 }
 
 export class UserInputTransform extends Transform {
