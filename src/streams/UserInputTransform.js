@@ -13,6 +13,8 @@ import {
   createDirectoryInstruction,
   renameFileInstruction,
   copyFileInstruction,
+  deleteFileInstruction,
+  moveFileInstruction,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -28,6 +30,8 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.MK_DIR]: createDirectoryInstruction,
   [KNOWN_COMMANDS.RN]: renameFileInstruction,
   [KNOWN_COMMANDS.CP]: copyFileInstruction,
+  [KNOWN_COMMANDS.RM]: deleteFileInstruction,
+  [KNOWN_COMMANDS.MV]: moveFileInstruction,
 }
 
 export class UserInputTransform extends Transform {

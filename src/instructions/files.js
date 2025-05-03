@@ -3,7 +3,7 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { UserMessage } from '../constants/userMessage.js'
 import { fallbackInstruction } from './fallback.js'
 import { EOL } from 'node:os'
-import { access, mkdir, open, rename, stat } from 'node:fs/promises'
+import { access, mkdir, open, rename, stat, unlink } from 'node:fs/promises'
 
 export const catInstruction = (path) => {
   const currentDir = process.cwd()
@@ -122,16 +122,40 @@ export const copyFileInstruction = async (filePath, newDirectoryPath) => {
     }
   }
 
-  const readStream = createReadStream(absoluteFilePath)
-  const writeStream = createWriteStream(newFilePath)
-
-  readStream.pipe(writeStream)
-
-  readStream.on('error', () => {
-    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+  return new Promise((res, rej) => {
+    const readStream = createReadStream(absoluteFilePath)
+    const writeStream = createWriteStream(newFilePath)
+  
+    readStream.pipe(writeStream)
+  
+    readStream.on('error', (e) => {
+      rej(new Error(UserMessage.OPERATION_FAILED, { cause: e }))
+    })
+  
+    writeStream.on('error', (e) => {
+      rej(new Error(UserMessage.OPERATION_FAILED, { cause: e }))
+    })
+  
+    writeStream.on('finish', () => {
+      res()
+    })
   })
 
-  writeStream.on('error', () => {
+}
+
+export const deleteFileInstruction = async (filePath) => {
+  try {
+    await unlink(filePath)
+  } catch(e) {
     throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
-  })
+  }
+}
+
+export const moveFileInstruction = async (filePath, newDirPath) => {
+  try {
+    await copyFileInstruction(filePath, newDirPath)
+    await deleteFileInstruction(filePath)
+  } catch (e) {
+    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+  }
 }

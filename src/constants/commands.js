@@ -8,4 +8,6 @@ export const KNOWN_COMMANDS = {
   MK_DIR: 'mkdir',
   RN: 'rn',
   CP: 'cp',
+  RM: 'rm',
+  MV: 'mv'
 }
