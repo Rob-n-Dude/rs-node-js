@@ -9,5 +9,6 @@ export const KNOWN_COMMANDS = {
   RN: 'rn',
   CP: 'cp',
   RM: 'rm',
-  MV: 'mv'
+  MV: 'mv',
+  OS: 'os'
 }

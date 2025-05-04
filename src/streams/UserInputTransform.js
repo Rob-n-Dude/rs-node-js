@@ -15,6 +15,7 @@ import {
   copyFileInstruction,
   deleteFileInstruction,
   moveFileInstruction,
+  systemInstruction,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -32,6 +33,7 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.CP]: copyFileInstruction,
   [KNOWN_COMMANDS.RM]: deleteFileInstruction,
   [KNOWN_COMMANDS.MV]: moveFileInstruction,
+  [KNOWN_COMMANDS.OS]: systemInstruction
 }
 
 export class UserInputTransform extends Transform {
@@ -51,7 +53,6 @@ export class UserInputTransform extends Transform {
       await instruction(...value)
     } catch (e) {
       // TODO: find a new way to handle errors
-      console.log('inside transform', e)
       fallbackInstruction()
     } finally {
       this.push(loggerTrigger)
