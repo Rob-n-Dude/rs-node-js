@@ -16,6 +16,7 @@ import {
   deleteFileInstruction,
   moveFileInstruction,
   systemInstruction,
+  hashInstruction,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -33,7 +34,8 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.CP]: copyFileInstruction,
   [KNOWN_COMMANDS.RM]: deleteFileInstruction,
   [KNOWN_COMMANDS.MV]: moveFileInstruction,
-  [KNOWN_COMMANDS.OS]: systemInstruction
+  [KNOWN_COMMANDS.OS]: systemInstruction,
+  [KNOWN_COMMANDS.HASH]: hashInstruction,
 }
 
 export class UserInputTransform extends Transform {
