@@ -17,6 +17,8 @@ import {
   moveFileInstruction,
   systemInstruction,
   hashInstruction,
+  compressInstruction,
+  decompressInstruction,
  } from '../instructions/index.js'
 
 const commandSeparator = ' '
@@ -36,6 +38,8 @@ const MAP_COMMAND_TO_OPERATION = {
   [KNOWN_COMMANDS.MV]: moveFileInstruction,
   [KNOWN_COMMANDS.OS]: systemInstruction,
   [KNOWN_COMMANDS.HASH]: hashInstruction,
+  [KNOWN_COMMANDS.COMPRESS]: compressInstruction,
+  [KNOWN_COMMANDS.DECOMPRESS]: decompressInstruction,
 }
 
 export class UserInputTransform extends Transform {
