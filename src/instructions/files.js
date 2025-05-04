@@ -1,36 +1,37 @@
 import { createReadStream, createWriteStream } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
-import { UserMessage } from '../constants/userMessage.js'
-import { fallbackInstruction } from './fallback.js'
 import { EOL } from 'node:os'
 import { access, mkdir, open, rename, stat, unlink } from 'node:fs/promises'
+import { InvalidInputError, OperationFailedError } from '../helpers/error.js'
 
 export const catInstruction = (path) => {
+  if (!path) {
+    throw new InvalidInputError()
+  }
+
   const currentDir = process.cwd()
   const target = resolve(currentDir, path)
 
   const readFile = createReadStream(target, {encoding: 'utf-8'})
 
-  try {
+  return new Promise((resolve, reject) => {
     readFile.pipe(process.stdout)
 
-    readFile.on('error', () => {
-      fallbackInstruction()
+    readFile.on('error', (e) => {
+      reject(new OperationFailedError({ cause: e }))
     })
 
     readFile.on('end', () => {
+      resolve()
       process.stdout.write(EOL)
     })
-
-  } catch(e) {
-    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
-  }
+  })
 }
 
 
 export const createEmptyFileInstruction = async (fileName) => {
   if (!fileName) {
-    return fallbackInstruction()
+    throw new InvalidInputError()
   }
 
   const currentDirectory = process.cwd()
@@ -38,20 +39,16 @@ export const createEmptyFileInstruction = async (fileName) => {
 
   try {
     const file = await open(safeFilePath, 'a')
-
     await file.close()
-
   } catch (e) {
-    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+    throw new OperationFailedError({ cause: e})
   }
 }
 
 export const createDirectoryInstruction = async (dirName) => {
   if (!dirName) {
-    fallbackInstruction()
-    return
+    throw new InvalidInputError()
   }
-
   
   const currentDirectory = process.cwd()
   const safeDirPath = join(currentDirectory, basename(dirName))
@@ -59,33 +56,40 @@ export const createDirectoryInstruction = async (dirName) => {
   try {
     await mkdir(safeDirPath, { recursive: false })
   } catch(e) {
-      throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+    throw new OperationFailedError({ cause: e })
   }
 }
 
 export const renameFileInstruction = async (filePath, newName) => {
-  const absoluteFilePath = resolve(process.cwd(), filePath)
+  if (!filePath || !newName) {
+    throw new InvalidInputError()
+  }
 
+  const absoluteFilePath = resolve(process.cwd(), filePath)
 
   const newSafeFilePath = join(dirname(absoluteFilePath), basename(newName))
 
   try {
     await access(newSafeFilePath)
-    throw new Error(UserMessage.OPERATION_FAILED)
+    throw new OperationFailedError()
   } catch (e) {
     if (e.code !== 'ENOENT') {
-      throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+      throw new OperationFailedError({ cause: e })
     }
   }
 
   try {
     await rename(absoluteFilePath, newSafeFilePath)
   } catch (e) {
-    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+    throw new OperationFailedError({ cause: e })
   }
 }
 
 export const copyFileInstruction = async (filePath, newDirectoryPath) => {
+  if (!filePath || !newDirectoryPath) {
+    throw new InvalidInputError()
+  }
+
   const absoluteFilePath = resolve(process.cwd(), filePath)
 
   const absoluteNewDirPath = resolve(process.cwd(), newDirectoryPath)
@@ -94,7 +98,7 @@ export const copyFileInstruction = async (filePath, newDirectoryPath) => {
     await access(absoluteFilePath)
   } catch (e) {
     if (e.code !== 'ENOENT') {
-      throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+      throw new OperationFailedError({ cause: e })
     }
   }
 
@@ -102,23 +106,22 @@ export const copyFileInstruction = async (filePath, newDirectoryPath) => {
     const dirStats = await stat(absoluteNewDirPath)
 
     if (!dirStats.isDirectory()) {
-      throw new Error(UserMessage.OPERATION_FAILED)
+      throw new OperationFailedError()
     }
   } catch (e) {
-    throw new Error(UserMessage.OPERATION_FAILED, {cause: e})
+    throw new OperationFailedError({ cause: e })
   }
 
   const fileName = basename(absoluteFilePath)
 
   const newFilePath = join(absoluteNewDirPath, fileName)
 
-
   try {
     await access(newFilePath)
-    throw new Error(UserMessage.OPERATION_FAILED)
+    throw new OperationFailedError()
   } catch (e) {
     if (e.code !== 'ENOENT') {
-      throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+      throw new OperationFailedError({ cause: e })
     }
   }
 
@@ -129,11 +132,11 @@ export const copyFileInstruction = async (filePath, newDirectoryPath) => {
     readStream.pipe(writeStream)
   
     readStream.on('error', (e) => {
-      rej(new Error(UserMessage.OPERATION_FAILED, { cause: e }))
+      rej(new OperationFailedError({ cause: e }))
     })
   
     writeStream.on('error', (e) => {
-      rej(new Error(UserMessage.OPERATION_FAILED, { cause: e }))
+      rej(new OperationFailedError({ cause: e }))
     })
   
     writeStream.on('finish', () => {
@@ -144,10 +147,14 @@ export const copyFileInstruction = async (filePath, newDirectoryPath) => {
 }
 
 export const deleteFileInstruction = async (filePath) => {
+  if (!filePath) {
+    throw new InvalidInputError()
+  }
+
   try {
     await unlink(filePath)
   } catch(e) {
-    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+    throw new OperationFailedError({ cause: e})
   }
 }
 
@@ -156,6 +163,6 @@ export const moveFileInstruction = async (filePath, newDirPath) => {
     await copyFileInstruction(filePath, newDirPath)
     await deleteFileInstruction(filePath)
   } catch (e) {
-    throw new Error(UserMessage.OPERATION_FAILED, { cause: e })
+    throw new OperationFailedError({ cause: e})
   }
 }

@@ -1,11 +1,14 @@
 import { createHash } from 'node:crypto'
 import { createReadStream } from 'node:fs'
-import { UserMessage } from '../constants/userMessage.js'
 import { resolve } from 'node:path'
+import { InvalidInputError, OperationFailedError } from '../helpers/error.js'
 
 const ALG = 'sha256'
 
 export const hashInstruction = (filePath) => {
+  if (!filePath) {
+    throw new InvalidInputError()
+  }
   const absFilePath = resolve(process.cwd(), filePath)
 
   return new Promise((resolve, reject) => {
@@ -23,7 +26,7 @@ export const hashInstruction = (filePath) => {
     })
 
     readStream.on('error', (e) => {
-      reject(new Error(UserMessage.OPERATION_FAILED, {cause: e}))
+      reject(new OperationFailedError({ cause: e }))
     })
   })
 }

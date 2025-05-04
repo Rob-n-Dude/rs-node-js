@@ -1,6 +1,6 @@
 import { dirname, isAbsolute, join } from 'node:path'
-import { UserMessage } from '../constants/userMessage.js'
 import { lstat, readdir } from 'node:fs/promises'
+import { InvalidInputError } from '../helpers/error.js'
 
 const LS_KEY = {
   NAME: 'Name',
@@ -25,7 +25,7 @@ export const upInstruction = () => {
 
 export const cdInstruction = (path) => {
   if (!path) {
-    throw new Error(UserMessage.INVALID_INPUT)
+    throw new InvalidInputError()
   }
 
   const currentDirectory = process.cwd()
@@ -44,7 +44,7 @@ export const listInstruction = async () => {
 
   const dirContent = await readdir(currentDirectory, { withFileTypes: false})
 
-  const contentPromises = await Promise.all(
+  const result = await Promise.all(
     dirContent.map(async (el) => {
       const path = join(currentDirectory, el)
       const stats = await lstat(path)
@@ -56,8 +56,6 @@ export const listInstruction = async () => {
       }
     })
   )
-
-  const result = await Promise.all(contentPromises)
 
   const sortedResult = [...result].sort((a,b) => {
     if (a[LS_KEY.TYPE] === b[LS_KEY.TYPE]) {
@@ -74,5 +72,6 @@ export const listInstruction = async () => {
 
     return 0
   })
+
   console.table(sortedResult)
 }

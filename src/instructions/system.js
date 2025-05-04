@@ -1,5 +1,5 @@
 import os from 'node:os'
-import { UserMessage } from '../constants/userMessage.js'
+import { InvalidInputError } from '../helpers/error.js'
 
 const KNOWN_ARGUMENTS = {
   EOL: 'EOL',
@@ -21,10 +21,10 @@ const MAP_ARGUMENT_TO_EXECUTOR = {
 export const systemInstruction = (argument) => {
   const fn = MAP_ARGUMENT_TO_EXECUTOR[parseArgument(argument)]
 
-
   if (!fn) {
-    throw new Error(UserMessage.INVALID_INPUT)
+    throw new InvalidInputError()
   }
+
   console.log(fn())
 }
 
