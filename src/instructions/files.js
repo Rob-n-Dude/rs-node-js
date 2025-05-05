@@ -1,8 +1,9 @@
 import { createReadStream, createWriteStream } from 'node:fs'
 import { basename, dirname, join, resolve } from 'node:path'
 import { EOL } from 'node:os'
-import { access, mkdir, open, rename, stat, unlink } from 'node:fs/promises'
+import {  mkdir, open, rename, stat, unlink } from 'node:fs/promises'
 import { InvalidInputError, OperationFailedError } from '../helpers/error.js'
+import { isFileExists } from '../helpers/file.js'
 
 export const catInstruction = (path) => {
   if (!path) {
@@ -69,13 +70,10 @@ export const renameFileInstruction = async (filePath, newName) => {
 
   const newSafeFilePath = join(dirname(absoluteFilePath), basename(newName))
 
-  try {
-    await access(newSafeFilePath)
+  const isNewFileNameTaken = await isFileExists(newSafeFilePath)
+
+  if (isNewFileNameTaken) {
     throw new OperationFailedError()
-  } catch (e) {
-    if (e.code !== 'ENOENT') {
-      throw new OperationFailedError({ cause: e })
-    }
   }
 
   try {
@@ -91,59 +89,55 @@ export const copyFileInstruction = async (filePath, newDirectoryPath) => {
   }
 
   const absoluteFilePath = resolve(process.cwd(), filePath)
-
   const absoluteNewDirPath = resolve(process.cwd(), newDirectoryPath)
 
   try {
-    await access(absoluteFilePath)
-  } catch (e) {
-    if (e.code !== 'ENOENT') {
-      throw new OperationFailedError({ cause: e })
-    }
-  }
+    const isSourceFilePresent = await isFileExists(absoluteFilePath)
 
-  try {
-    const dirStats = await stat(absoluteNewDirPath)
-
-    if (!dirStats.isDirectory()) {
+    if (!isSourceFilePresent) {
       throw new OperationFailedError()
     }
-  } catch (e) {
-    throw new OperationFailedError({ cause: e })
-  }
 
-  const fileName = basename(absoluteFilePath)
+    try {
+      const dirStats = await stat(absoluteNewDirPath)
 
-  const newFilePath = join(absoluteNewDirPath, fileName)
-
-  try {
-    await access(newFilePath)
-    throw new OperationFailedError()
-  } catch (e) {
-    if (e.code !== 'ENOENT') {
+      if (!dirStats.isDirectory()) {
+        throw new OperationFailedError()
+      }
+    } catch (e) {
       throw new OperationFailedError({ cause: e })
     }
-  }
 
-  return new Promise((res, rej) => {
-    const readStream = createReadStream(absoluteFilePath)
-    const writeStream = createWriteStream(newFilePath)
-  
-    readStream.pipe(writeStream)
-  
-    readStream.on('error', (e) => {
-      rej(new OperationFailedError({ cause: e }))
-    })
-  
-    writeStream.on('error', (e) => {
-      rej(new OperationFailedError({ cause: e }))
-    })
-  
-    writeStream.on('finish', () => {
-      res()
-    })
-  })
+    const fileName = basename(absoluteFilePath)
+    const newFilePath = join(absoluteNewDirPath, fileName)
 
+    const isTargetFilePresent = await isFileExists(newFilePath)
+
+    if (isTargetFilePresent) {
+      throw new OperationFailedError()
+    }
+
+    return new Promise((res, rej) => {
+      const readStream = createReadStream(absoluteFilePath)
+      const writeStream = createWriteStream(newFilePath)
+    
+      readStream.pipe(writeStream)
+    
+      readStream.on('error', (e) => {
+        rej(new OperationFailedError({ cause: e }))
+      })
+    
+      writeStream.on('error', (e) => {
+        rej(new OperationFailedError({ cause: e }))
+      })
+    
+      writeStream.on('finish', () => {
+        res()
+      })
+    })
+  } catch (e) {
+    throw new OperationFailedError({ cause: e})
+  } 
 }
 
 export const deleteFileInstruction = async (filePath) => {

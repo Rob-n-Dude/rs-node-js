@@ -19,7 +19,7 @@ import {
   compressInstruction,
   decompressInstruction,
  } from '../instructions/index.js'
-import { isCustomError } from '../helpers/error.js'
+import { InvalidInputError, isCustomError } from '../helpers/error.js'
 import { getUserNameAndGreet } from '../helpers/user.js'
 
 const commandSeparator = ' '
@@ -58,6 +58,10 @@ export class UserInputTransform extends Transform {
     try {
       const instruction = MAP_COMMAND_TO_OPERATION[command]
   
+      if (!instruction) {
+        throw new InvalidInputError()
+      }
+
       await instruction(...value)
     } catch (error) {
       if (isCustomError(error)) {
